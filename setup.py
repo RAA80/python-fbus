@@ -5,7 +5,7 @@ from setuptools import setup
 setup(name="python-fbus",
       version="0.0.1",
       description="Fastwel FBUS Protocol v2.4",
-      url="http://gitlab.main1325.ru/aaryadno/python-fbus",
+      url="https://github.com/RAA80/python-fbus",
       author="Alexey Ryadno",
       author_email="aryadno@mail.ru",
       license="MIT",
