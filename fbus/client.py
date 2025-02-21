@@ -4,15 +4,18 @@
 Fastwel FBUS SDK Версия 2.4.
 """
 
+from __future__ import annotations
+
 import os
 from ctypes import (CDLL, CFUNCTYPE, POINTER, Structure, byref, c_int, c_size_t,
                     c_uint, c_uint8, c_uint32, c_void_p, cdll, sizeof)
 from functools import partial
-from typing import Callable, TypeVar
+from typing import TYPE_CHECKING, Callable
 
 from .protocol import FBUS_ADAPTER, FBUS_RESULT, FIO_MODULE_COMMON_CONF, FIO_MODULE_DESC
 
-T = TypeVar("T")
+if TYPE_CHECKING:
+    from _ctypes import _CData, _PyCFuncPtrType
 
 
 def _load_lib(name: str) -> CDLL:
@@ -68,14 +71,14 @@ class FBusDevice(c_void_p):
         "fbusGetAdapterInfo": CFUNCTYPE(c_uint, c_size_t, c_void_p, c_size_t),
     }
 
-    def __call__(self, prototype: Callable, *arguments: tuple[T, ...]) -> bool:
+    def __call__(self, prototype: _PyCFuncPtrType, *arguments: tuple[_CData, ...]) -> bool:
         if result := prototype((self.name, _lib))(*arguments):
             msg = f"{self.name} error {result} ({FBUS_RESULT(result).name})"
             raise FBusError(msg)
 
         return True
 
-    def __getattr__(self, name: str) -> partial:
+    def __getattr__(self, name: str) -> Callable[..., bool]:
         self.name = name
         return partial(self.__call__, self._functions_[name])
 
