@@ -61,7 +61,7 @@ if __name__ == "__main__":
     spec_par.Parity = NIM74X_UART_PARITY.NONE
     print(f"fbusSetNodeSpecificParameters {bus.fbusSetNodeSpecificParameters(net_id=0, src=spec_par)}")
 
-    spec_par = bus.fbusGetNodeSpecificParameters(net_id=0, dest=NIM74X_CONFIGURATION())
+    spec_par = bus.fbusGetNodeSpecificParameters(net_id=0, dest=NIM74X_CONFIGURATION)
     print(f"fbusGetNodeSpecificParameters {spec_par}")
     print(f"    Mode: {spec_par.Mode}")
     print(f"    Baudrate: {spec_par.Baudrate}")
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     print(f"fbusWriteOutputs {bus.fbusWriteOutputs(net_id=0, src=outputs)}")
 
     # Читаем ответные данные из RxData0–31
-    inputs = bus.fbusReadInputs(net_id=0, dest=NIM74X_INPUTS())
+    inputs = bus.fbusReadInputs(net_id=0, dest=NIM74X_INPUTS)
     print(f"fbusReadInputs {inputs}")
     print(f"    Diagnostics: {inputs.Diagnostics}")
     print(f"    Status: {inputs.Status:016b}")

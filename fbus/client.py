@@ -7,6 +7,7 @@ Fastwel FBUS SDK Версия 2.4.
 from __future__ import annotations
 
 import os
+import platform
 from ctypes import (CDLL, CFUNCTYPE, POINTER, Structure, byref, c_int, c_size_t,
                     c_uint, c_uint8, c_uint32, c_void_p, cdll, sizeof)
 from functools import partial
@@ -18,14 +19,18 @@ if TYPE_CHECKING:
     from _ctypes import _CData, _PyCFuncPtrType
 
 
-def _load_lib(name: str) -> CDLL:
-    return cdll.LoadLibrary(os.path.join(os.path.dirname(__file__), "libs", name))
+def _load_lib(arch: str, name: str) -> CDLL:
+    return cdll.LoadLibrary(os.path.join(os.path.dirname(__file__), "libs", arch, name))
 
 
 if os.name == "posix":
-    _lib = _load_lib("libfbus.so")
+    if platform.architecture()[0] == "32bit":
+        _lib = _load_lib("linux32", "libfbus.so")
+    elif platform.architecture()[0] == "64bit":
+        _lib = _load_lib("linux64", "libfbus.so")
 elif os.name == "nt":
-    _lib = _load_lib("fbuslibw.dll")
+    if platform.architecture()[0] == "32bit":
+        _lib = _load_lib("win32", "fbuslibw.dll")
 
 
 class FBusError(Exception):
@@ -120,7 +125,7 @@ class FBUS:
 
         if port not in range(1, 101):
             msg = "Invalid port number"
-            raise ValueError(msg)
+            raise FBusError(msg)
 
         net_number = {FBUS_ADAPTER.LOCAL: 100 + port - 1 if port > 1 else 0,
                       FBUS_ADAPTER.TCP: port,
@@ -192,14 +197,16 @@ class FBUS:
         return self._fbus.fbusSetNodeCommonParameters(self._hnet, c_uint8(net_id),
                                                       byref(src), sizeof(src))
 
-    def fbusGetNodeSpecificParameters(self, net_id: int, dest: Structure) -> Structure:
+    def fbusGetNodeSpecificParameters(self, net_id: int,
+                                            dest: type[Structure]) -> Structure:
         """Получить значения специфических изменяемых параметров модуля из
         конфигурации сети.
         """
 
+        config = dest()
         self._fbus.fbusGetNodeSpecificParameters(self._hnet, c_uint8(net_id),
-                                                 byref(dest), 0, sizeof(dest))
-        return dest
+                                                 byref(config), 0, sizeof(config))
+        return config
 
     def fbusSetNodeSpecificParameters(self, net_id: int, src: Structure) -> bool:
         """Установить значения специфических изменяемых параметров модуля в
@@ -224,9 +231,9 @@ class FBUS:
                                     output_offset: int, output_length: int) -> bool:
         """Присоединить модуль к группе в конфигурации сети."""
 
-        return self._fbus.fbusAssignNodeToGroup(self._hnet, c_uint8(node_id), c_uint8(group_id),
-                                                c_size_t(input_offset), c_size_t(input_length),
-                                                c_size_t(output_offset), c_size_t(output_length))
+        return self._fbus.fbusAssignNodeToGroup(self._hnet, c_uint8(node_id),
+                    c_uint8(group_id), c_size_t(input_offset), c_size_t(input_length),
+                    c_size_t(output_offset), c_size_t(output_length))
 
     def fbusBuildGroups(self) -> bool:
         """Инициализировать параметры группового обмена всех модулей в
@@ -256,12 +263,13 @@ class FBUS:
 
 # Функции индивидуальных запросов
 
-    def fbusReadInputs(self, net_id: int, dest: Structure) -> Structure:
+    def fbusReadInputs(self, net_id: int, dest: type[Structure]) -> Structure:
         """Чтение области входных данных из модуля."""
 
-        self._fbus.fbusReadInputs(self._hnet, c_uint8(net_id), byref(dest),
-                                  0, sizeof(dest))
-        return dest
+        inputs = dest()
+        self._fbus.fbusReadInputs(self._hnet, c_uint8(net_id), byref(inputs),
+                                  0, sizeof(inputs))
+        return inputs
 
     def fbusWriteOutputs(self, net_id: int, src: Structure) -> bool:
         """Запись в область выходных данных модуля."""
@@ -281,16 +289,16 @@ class FBUS:
         """Записать данные выходов модуля в выходной буфер группы."""
 
         return self._fbus.fbusGroup_setNodeOutputs(self._hnet, c_uint8(group_id),
-                                                   c_uint8(node_id), 0, sizeof(src),
-                                                   byref(src))
+                                    c_uint8(node_id), 0, sizeof(src), byref(src))
 
     def fbusGroupGetNodeInputs(self, group_id: int, node_id: int,
-                                     dest: Structure) -> bool:
+                                     dest: type[Structure]) -> Structure:
         """Прочитать данные входов модуля из входного буфера группы."""
 
-        return self._fbus.fbusGroup_getNodeInputs(self._hnet, c_uint8(group_id),
-                                                  c_uint8(node_id), 0, sizeof(dest),
-                                                  byref(dest))
+        inputs = dest()
+        self._fbus.fbusGroup_getNodeInputs(self._hnet, c_uint8(group_id),
+                                c_uint8(node_id), 0, sizeof(inputs), byref(inputs))
+        return inputs
 
 # Функции калибровки
 
@@ -299,16 +307,14 @@ class FBUS:
         """."""
 
         return self._fbus.fbusModuleGetCalibrationData(self._hnet, c_uint8(net_id),
-                                                       c_size_t(offset), c_size_t(length),
-                                                       byref(dest))
+                                    c_size_t(offset), c_size_t(length), byref(dest))
 
     def fbusModuleSetCalibrationData(self, net_id: int, offset: int,
                                            length: int, src: Structure) -> bool:
         """."""
 
         return self._fbus.fbusModuleSetCalibrationData(self._hnet, c_uint8(net_id),
-                                                       c_size_t(offset), c_size_t(length),
-                                                       byref(src))
+                                    c_size_t(offset), c_size_t(length), byref(src))
 
     def fbusModuleEnterCalibrationMode(self, net_id: int) -> bool:
         """."""

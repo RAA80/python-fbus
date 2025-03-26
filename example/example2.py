@@ -57,7 +57,7 @@ if __name__ == "__main__":
     spec_par.mode = 0b0000
     print(f"fbusSetNodeSpecificParameters {bus.fbusSetNodeSpecificParameters(net_id=0, src=spec_par)}")
 
-    spec_par = bus.fbusGetNodeSpecificParameters(net_id=0, dest=DIM718_CONFIGURATION())
+    spec_par = bus.fbusGetNodeSpecificParameters(net_id=0, dest=DIM718_CONFIGURATION)
     print(f"fbusGetNodeSpecificParameters {spec_par}")
     print(f"    initialOutputStates: {spec_par.initialOutputStates}")
     print(f"    outputSafeStates: {spec_par.outputSafeStates}")
@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     # Посылаем данные
     outputs = DIM718_OUTPUTS()
-    outputs.digitalOutputs = 0x11111111
+    outputs.digitalOutputs = 0b11111111
     outputs.firstHalfDuty_PWM0 = 0
     outputs.secondHalfDuty_PWM0 = 0
     outputs.firstHalfDuty_PWM1 = 0
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     sleep(0.2)
 
     # Читаем ответные данные
-    inputs = bus.fbusReadInputs(net_id=0, dest=DIM718_INPUTS())
+    inputs = bus.fbusReadInputs(net_id=0, dest=DIM718_INPUTS)
     print(f"fbusReadInputs {inputs}")
     print(f"    diagnostics: {inputs.diagnostics:08b}")
     print(f"    channelsStates: {inputs.channelsStates:08b}")

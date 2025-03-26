@@ -3,14 +3,16 @@
 from setuptools import setup
 
 setup(name="python-fbus",
-      version="0.0.1",
+      version="0.0.2",
       description="Fastwel FBUS Protocol v2.4",
       url="https://github.com/RAA80/python-fbus",
       author="Alexey Ryadno",
       author_email="aryadno@mail.ru",
       license="MIT",
       packages=["fbus", "fbus.libs", "fbus.device"],
-      package_data={"fbus": ["libs/*.dll", "libs/*.so"]},
+      package_data={"fbus": ["libs/win32/*.dll",
+                             "libs/linux32/*.so",
+                             "libs/linux64/*.so"]},
       platforms=["Linux", "Windows"],
       classifiers=["Development Status :: 3 - Alpha",
                    "Intended Audience :: Science/Research",
