@@ -7,13 +7,14 @@ Fastwel FBUS SDK Версия 2.4.
 from __future__ import annotations
 
 import os
-import platform
 from ctypes import (CDLL, CFUNCTYPE, POINTER, Structure, byref, c_int, c_size_t,
                     c_uint, c_uint8, c_uint32, c_void_p, cdll, sizeof)
 from functools import partial
+from platform import architecture
 from typing import TYPE_CHECKING, Callable
 
-from .protocol import FBUS_ADAPTER, FBUS_RESULT, FIO_MODULE_COMMON_CONF, FIO_MODULE_DESC
+from fbus.protocol import (FBUS_ADAPTER, FBUS_RESULT, FIO_MODULE_COMMON_CONF,
+                           FIO_MODULE_DESC)
 
 if TYPE_CHECKING:
     from _ctypes import _CData, _PyCFuncPtrType
@@ -23,14 +24,11 @@ def _load_lib(arch: str, name: str) -> CDLL:
     return cdll.LoadLibrary(os.path.join(os.path.dirname(__file__), "libs", arch, name))
 
 
-if os.name == "posix":
-    if platform.architecture()[0] == "32bit":
-        _lib = _load_lib("linux32", "libfbus.so")
-    elif platform.architecture()[0] == "64bit":
-        _lib = _load_lib("linux64", "libfbus.so")
-elif os.name == "nt":
-    if platform.architecture()[0] == "32bit":
-        _lib = _load_lib("win32", "fbuslibw.dll")
+arch = {"posix": {"32bit": ("linux32", "libfbus.so"),
+                  "64bit": ("linux64", "libfbus.so")},
+        "nt":    {"32bit": ("win32", "fbuslibw.dll")},
+       }[os.name][architecture()[0]]
+_lib = _load_lib(*arch)
 
 
 class FBusError(Exception):
@@ -83,7 +81,7 @@ class FBusDevice(c_void_p):
 
         return True
 
-    def __getattr__(self, name: str) -> Callable[..., bool]:
+    def __getattr__(self, name: str) -> Callable[..., bool]:    # type: ignore
         self.name = name
         return partial(self.__call__, self._functions_[name])
 
