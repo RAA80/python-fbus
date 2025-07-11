@@ -13,8 +13,8 @@ from functools import partial
 from platform import architecture
 from typing import TYPE_CHECKING, Callable
 
-from fbus.protocol import (FBUS_ADAPTER, FBUS_RESULT, FIO_MODULE_COMMON_CONF,
-                           FIO_MODULE_DESC)
+from fbus.protocol import (FBUS_ADAPTER, FBUS_ADAPTER_INFO, FBUS_RESULT,
+                           FIO_MODULE_COMMON_CONF, FIO_MODULE_DESC)
 
 if TYPE_CHECKING:
     from _ctypes import _CData, _PyCFuncPtrType
@@ -338,10 +338,13 @@ class FBUS:
 
 # Функции -------
 
-    def fbusGetAdapterInfo(self, dest: Structure) -> bool:
-        """."""
+    def fbusGetAdapterInfo(self) -> FBUS_ADAPTER_INFO:
+        """Информация об удаленном адаптере."""
 
-        return self._fbus.fbusGetAdapterInfo(self._hnet, byref(dest), sizeof(dest))
+        dest = FBUS_ADAPTER_INFO()
+
+        self._fbus.fbusGetAdapterInfo(self._hnet, byref(dest), sizeof(dest))
+        return dest
 
 
 __all__ = ["FBUS"]

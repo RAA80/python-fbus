@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(name="python-fbus",
-      version="0.0.2",
+      version="0.0.3",
       description="Fastwel FBUS Protocol v2.4",
       url="https://github.com/RAA80/python-fbus",
       author="Alexey Ryadno",

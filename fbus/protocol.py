@@ -181,3 +181,24 @@ class FIO_MODULE_COMMON_CONF(Structure):
         ("InputSync", c_uint8),                 # Номер синхронизирующего сообщения при получении которого МВВ актуализирует свои входы. Значение FBUS_UNDEFINED_SYNC_ID (0xFF) означает, что МВВ актуализирует свои входы асинхронно
         ("GroupConf", FIO_MODULE_GROUP_CONF),   # Параметры конфигурации группового обмена
     ]
+
+
+class F_FBUS_NIM745_INFO(Structure):
+    """Информация об адаптере NIM745."""
+
+    _pack_ = 1
+    _fields_ = [
+        ("prodcode", c_uint32),     # Production code
+        ("sernum", c_uint32),       # Serial number
+        ("fw", c_uint8 * 2),        # Firmware (ver, subver)
+        ("mac", c_uint8 * 6),       # MAC адрес
+    ]
+
+
+class FBUS_ADAPTER_INFO(Structure):
+    """Информация об удаленном адаптере."""
+
+    _fields_ = [
+        ("type", c_size_t),                 # Тип устройства
+        ("nim745", F_FBUS_NIM745_INFO),     # Информация об удаленном адаптере
+    ]
